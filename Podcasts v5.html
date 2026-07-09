@@ -176,14 +176,16 @@
     .fp-body {
       flex: 1; display: flex; flex-direction: column;
       align-items: center; justify-content: center;
-      padding: 0 32px 32px; gap: 28px;
+      padding: 0 32px 32px; gap: 28px; overflow-y: auto;
     }
 
     .fp-artwork {
       width: min(70vw, 320px); aspect-ratio: 1; border-radius: var(--radius-lg);
       object-fit: cover; background: var(--surface-2);
       box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 80px var(--accent-glow);
+      cursor: pointer; flex-shrink: 0;
     }
+    .fp-artwork:active { transform: scale(0.98); }
 
     .fp-info { text-align: center; width: 100%; }
     .fp-title {
@@ -192,6 +194,12 @@
       -webkit-box-orient: vertical; overflow: hidden;
     }
     .fp-podcast { font-size: 14px; color: var(--accent); font-weight: 500; margin-top: 4px; }
+    .fp-description {
+      font-size: 13px; color: var(--text-3); line-height: 1.5;
+      margin-top: 12px; max-height: 100px; overflow: hidden;
+      cursor: pointer; transition: color 0.2s;
+    }
+    .fp-description:hover { color: var(--text-2); }
 
     .fp-seek { width: 100%; }
     .fp-seek input[type="range"] {
@@ -249,11 +257,19 @@
       background: var(--surface-2); color: var(--text-2);
       border: 1px solid var(--border);
       transition: transform 0.1s, background 0.15s;
+      position: relative;
     }
     .fp-action-btn:active { transform: scale(0.95); background: var(--surface-3); }
     .fp-action-btn.downloading {
       background: var(--accent-dim); color: var(--accent);
       border-color: var(--accent);
+    }
+    .fp-action-btn .status-badge {
+      position: absolute; top: -6px; right: -6px;
+      width: 20px; height: 20px; border-radius: 50%;
+      background: var(--success); display: flex;
+      align-items: center; justify-content: center;
+      font-size: 10px; color: #fff;
     }
 
     /* ========== SEARCH ========== */
@@ -301,6 +317,7 @@
     .ep-item {
       display: flex; align-items: center; gap: 12px;
       padding: 14px 0; border-bottom: 1px solid var(--border);
+      position: relative;
     }
     .ep-item:last-child { border-bottom: none; }
     .ep-play-btn {
@@ -308,9 +325,13 @@
       display: flex; align-items: center; justify-content: center;
       background: var(--accent-dim); color: var(--accent); font-size: 14px;
       flex-shrink: 0; transition: background 0.15s, transform 0.1s;
+      position: relative;
+    }
+    .ep-play-btn.loading {
+      animation: spin 0.8s linear infinite;
     }
     .ep-play-btn:active { transform: scale(0.9); background: var(--accent-glow); }
-    .ep-info { flex: 1; min-width: 0; }
+    .ep-info { flex: 1; min-width: 0; cursor: pointer; }
     .ep-title {
       font-size: 14px; font-weight: 500; line-height: 1.4;
       display: -webkit-box; -webkit-line-clamp: 2;
@@ -325,12 +346,19 @@
       display: flex; align-items: center; justify-content: center;
       color: var(--text-3); font-size: 16px; flex-shrink: 0;
       transition: color 0.15s, background 0.15s;
-      background: var(--surface-2);
+      background: var(--surface-2); position: relative;
     }
     .ep-dl-btn:active { background: var(--surface-3); color: var(--text-2); }
     .ep-dl-btn.staging { color: var(--accent); background: var(--accent-dim); }
     .ep-dl-btn.done { color: var(--success); background: rgba(74,222,128,0.1); }
     .ep-dl-btn.failed { color: var(--error); background: rgba(248,113,113,0.1); }
+    .ep-dl-badge {
+      position: absolute; top: -6px; right: -6px;
+      width: 18px; height: 18px; border-radius: 3px;
+      background: var(--success); display: flex;
+      align-items: center; justify-content: center;
+      font-size: 9px; color: #fff;
+    }
 
     /* ========== OVERLAY (PODCAST DETAIL) ========== */
     #podcast-detail {
@@ -416,14 +444,14 @@
     /* ========== FOLLOWING FEED ========== */
     .feed-ep {
       display: flex; gap: 12px; padding: 14px 0;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--border); position: relative;
     }
     .feed-ep:last-child { border-bottom: none; }
     .feed-ep-art {
       width: 48px; height: 48px; border-radius: 8px;
       object-fit: cover; background: var(--surface-3); flex-shrink: 0;
     }
-    .feed-ep-info { flex: 1; min-width: 0; }
+    .feed-ep-info { flex: 1; min-width: 0; cursor: pointer; }
     .feed-ep-pod {
       font-size: 11px; font-weight: 600; color: var(--accent);
       text-transform: uppercase; letter-spacing: 0.5px;
@@ -439,7 +467,32 @@
       display: flex; gap: 8px; align-items: center;
     }
     .feed-ep-actions {
-      display: flex; align-items: center; gap: 4px; flex-shrink: 0;
+      display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+    }
+    .feed-ep-play {
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--accent-dim); color: var(--accent); font-size: 12px;
+      transition: background 0.15s, transform 0.1s;
+      position: relative;
+    }
+    .feed-ep-play.loading { animation: spin 0.8s linear infinite; }
+    .feed-ep-play:active { transform: scale(0.9); background: var(--accent-glow); }
+    .feed-ep-dl {
+      width: 36px; height: 36px; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--surface-2); color: var(--text-3); font-size: 14px;
+      transition: background 0.15s; position: relative;
+    }
+    .feed-ep-dl.staging { color: var(--accent); background: var(--accent-dim); }
+    .feed-ep-dl.done { color: var(--success); background: rgba(74,222,128,0.1); }
+    .feed-ep-dl:active { background: var(--surface-3); }
+    .feed-ep-dl-badge {
+      position: absolute; top: -6px; right: -6px;
+      width: 16px; height: 16px; border-radius: 3px;
+      background: var(--success); display: flex;
+      align-items: center; justify-content: center;
+      font-size: 8px; color: #fff;
     }
 
     /* ========== SETTINGS ========== */
@@ -600,6 +653,38 @@
     .dl-item-btn:active { background: var(--surface-3); }
     .dl-item-btn.delete { color: var(--error); }
     .dl-item-btn.saving { color: var(--accent); background: var(--accent-dim); }
+
+    /* ========== DESCRIPTION MODAL ========== */
+    #description-modal {
+      position: fixed; inset: 0; z-index: 250;
+      background: rgba(0,0,0,0.7); display: none;
+      align-items: flex-end; justify-content: center;
+    }
+    #description-modal.visible { display: flex; }
+    .description-sheet {
+      background: var(--surface); border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      padding: 20px; width: 100%;
+      max-height: 80vh; overflow-y: auto;
+      animation: slideUp 0.3s ease-out;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .description-title {
+      font-size: 16px; font-weight: 700; margin-bottom: 12px;
+    }
+    .description-content {
+      font-size: 14px; color: var(--text-2); line-height: 1.6;
+      white-space: pre-wrap; word-break: break-word;
+    }
+    .description-close {
+      position: absolute; top: 16px; right: 16px;
+      width: 32px; height: 32px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--surface-2); color: var(--text-2);
+      font-size: 16px; cursor: pointer;
+    }
 
     /* ========== UTILITY ========== */
     .hidden { display: none !important; }
@@ -773,10 +858,11 @@
       <button onclick="closeFullPlayer()" aria-label="Close"><i class="fas fa-xmark"></i></button>
     </div>
     <div class="fp-body">
-      <img id="fp-artwork" class="fp-artwork" src="" alt="">
+      <img id="fp-artwork" class="fp-artwork" src="" alt="" onclick="showDescription(state.currentEpisode?.description || 'No description available', state.currentEpisode?.title || 'Episode')">
       <div class="fp-info">
         <div id="fp-title" class="fp-title">--</div>
         <div id="fp-podcast" class="fp-podcast">--</div>
+        <div id="fp-description" class="fp-description" onclick="showDescription(state.currentEpisode?.description || 'No description available', state.currentEpisode?.title || 'Episode')">Click to read description</div>
       </div>
       <div class="fp-seek">
         <input type="range" id="fp-seek-bar" min="0" max="1000" value="0">
@@ -795,6 +881,7 @@
         <button class="fp-action-btn" id="fp-download-btn" onclick="downloadCurrentEpisode()">
           <i class="fas fa-download"></i>
           <span>Download</span>
+          <span class="status-badge hidden"><i class="fas fa-check"></i></span>
         </button>
       </div>
     </div>
@@ -808,6 +895,15 @@
       <div id="dl-modal-sub" class="modal-sub">0 of 0</div>
       <div id="dl-modal-detail" class="modal-detail">--</div>
       <button class="modal-cancel" id="dl-modal-cancel" onclick="cancelDownloadAll()">Cancel</button>
+    </div>
+  </div>
+
+  <!-- DESCRIPTION MODAL -->
+  <div id="description-modal">
+    <div class="description-sheet">
+      <div class="description-close" onclick="closeDescription()"><i class="fas fa-xmark"></i></div>
+      <div class="description-title" id="description-modal-title">Episode</div>
+      <div class="description-content" id="description-modal-content">--</div>
     </div>
   </div>
 
@@ -838,6 +934,7 @@
       currentEpisode: null,
       isPlaying: false,
       savingDownloads: new Set(),
+      loadingEpisodes: new Set(),
     };
 
     // ========================================
@@ -880,11 +977,13 @@
       const episodes = Array.from(items).map(item => {
         const enc = item.querySelector('enclosure');
         const dur = item.querySelector('itunes\\:duration')?.textContent || '';
+        const desc = item.querySelector('description')?.textContent || item.querySelector('itunes\\:summary')?.textContent || '';
         return {
           title: item.querySelector('title')?.textContent || 'Untitled',
           url: enc?.getAttribute('url') || '',
           date: item.querySelector('pubDate')?.textContent || '',
           duration: dur,
+          description: desc,
         };
       }).filter(ep => ep.url);
 
@@ -971,6 +1070,16 @@
       return state.downloads.some(d => d.url === url && d.status === 'done');
     }
 
+    function showDescription(description, title) {
+      $('description-modal-title').textContent = title;
+      $('description-modal-content').textContent = description;
+      $('description-modal').classList.add('visible');
+    }
+
+    function closeDescription() {
+      $('description-modal').classList.remove('visible');
+    }
+
     // ========================================
     // DOWNLOAD SYSTEM
     // ========================================
@@ -992,371 +1101,193 @@
         progress: 0,
         blob: null,
         timestamp: Date.now(),
-        error: null
+        error: null,
+        description: ''
       };
       
       state.downloads.push(dlEntry);
       saveState();
-      
-      updateDownloadButtonForUrl(url);
-      renderDownloads();
-      showToast('Download started', '');
+      updateDownloads();
       
       try {
-        const response = await fetchWithProxy(url);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        
-        const contentLength = parseInt(response.headers.get('content-length') || '0', 10);
-        const reader = response.body.getReader();
-        const chunks = [];
-        let received = 0;
-        
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          chunks.push(value);
-          received += value.length;
-          
-          dlEntry.progress = contentLength > 0 ? Math.round((received / contentLength) * 100) : 0;
-          updateDownloadButtonForUrl(url);
-          renderDownloads();
-        }
-        
-        const blob = new Blob(chunks, { type: 'audio/*' });
+        const resp = await fetchWithProxy(url);
+        const blob = await resp.blob();
         dlEntry.blob = blob;
         dlEntry.status = 'done';
         dlEntry.progress = 100;
-        
-      } catch (err) {
+        showToast('Download saved', 'success');
+      } catch(e) {
         dlEntry.status = 'failed';
-        dlEntry.error = err.message || 'Download failed';
-        showToast('Download failed', 'error');
+        dlEntry.error = e.message;
+        showToast('Download failed: ' + e.message, 'error');
       }
       
       saveState();
-      updateDownloadButtonForUrl(url);
-      renderDownloads();
+      updateDownloads();
+      updateFollowing();
+      updateEpisodeButtons();
+      updateFPDownloadBtn();
     }
 
-    function updateDownloadButtonForUrl(url) {
-      const dlBtn = document.querySelector(`[data-dl-url="${escAttr(url)}"]`);
-      if (!dlBtn) return;
+    function updateDownloads() {
+      const content = $('downloads-content');
+      const dls = state.downloads.filter(d => d.status !== 'deleted');
       
-      const dl = state.downloads.find(d => d.url === url);
-      if (!dl) {
-        dlBtn.className = 'ep-dl-btn';
-        dlBtn.innerHTML = '<i class="fas fa-download"></i>';
-        dlBtn.disabled = false;
+      if (dls.length === 0) {
+        content.innerHTML = '<div class="empty-state"><div class="empty-icon"><i class="fas fa-circle-down"></i></div><div class="empty-title">No downloads yet</div><div class="empty-sub">Downloaded episodes will appear here</div></div>';
         return;
       }
       
-      if (dl.status === 'downloading') {
-        dlBtn.className = 'ep-dl-btn staging';
-        dlBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
-        dlBtn.disabled = true;
-      } else if (dl.status === 'done') {
-        dlBtn.className = 'ep-dl-btn done';
-        dlBtn.innerHTML = '<i class="fas fa-check"></i>';
-        dlBtn.disabled = false;
-      } else if (dl.status === 'failed') {
-        dlBtn.className = 'ep-dl-btn failed';
-        dlBtn.innerHTML = '<i class="fas fa-exclamation"></i>';
-        dlBtn.disabled = false;
-      }
-    }
-
-    async function saveDownloadToDevice(dlId) {
-      const dl = state.downloads.find(d => d.id === dlId);
-      if (!dl || !dl.blob) {
-        showToast('Download not ready', 'error');
-        return;
-      }
-      
-      state.savingDownloads.add(dlId);
-      renderDownloads();
-      
-      try {
-        const filename = `${sanitize(dl.title)}.${dl.ext}`;
-        
-        if ('showSaveFilePicker' in window) {
-          const handle = await window.showSaveFilePicker({
-            suggestedName: filename,
-            types: [{ description: 'Audio File', accept: { 'audio/*': [`.${dl.ext}`] } }]
-          });
-          const writable = await handle.createWritable();
-          await writable.write(dl.blob);
-          await writable.close();
-        } else {
-          const url = URL.createObjectURL(dl.blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = filename;
-          a.click();
-          URL.revokeObjectURL(url);
-        }
-        
-        state.savingDownloads.delete(dlId);
-        renderDownloads();
-        showToast('Saved successfully', 'success');
-      } catch (err) {
-        state.savingDownloads.delete(dlId);
-        renderDownloads();
-        if (err.name !== 'AbortError') {
-          showToast('Could not save file', 'error');
-        }
-      }
+      content.innerHTML = dls.map(d => `
+        <div class="dl-item">
+          <div class="dl-item-icon ${d.status}">
+            ${d.status === 'downloading' ? '<i class="fas fa-spinner spinner"></i>' : d.status === 'done' ? '<i class="fas fa-check"></i>' : '<i class="fas fa-exclamation"></i>'}
+          </div>
+          <div class="dl-item-info">
+            <div class="dl-item-title">${escAttr(d.title)}</div>
+            <div class="dl-item-sub">${escAttr(d.podcastTitle)} • ${formatDate(d.date)}</div>
+            ${d.status === 'downloading' ? `<div class="dl-item-progress"><div class="dl-item-progress-fill" style="width:${d.progress}%"></div></div>` : ''}
+            <div class="dl-item-sub">${d.status === 'done' ? '✓ Downloaded' : d.status === 'failed' ? '✗ ' + (d.error || 'Failed') : 'Downloading...'}</div>
+          </div>
+          ${d.status === 'done' ? `<div class="dl-item-actions"><button class="dl-item-btn saving" onclick="playDownload('${escAttr(d.id)}')"><i class="fas fa-play"></i></button><button class="dl-item-btn delete" onclick="deleteDownload('${escAttr(d.id)}')"><i class="fas fa-trash"></i></button></div>` : ''}
+        </div>
+      `).join('');
     }
 
     function deleteDownload(dlId) {
-      const idx = state.downloads.findIndex(d => d.id === dlId);
-      if (idx >= 0) {
-        state.downloads.splice(idx, 1);
+      const dl = state.downloads.find(d => d.id === dlId);
+      if (dl) {
+        dl.status = 'deleted';
         saveState();
-        renderDownloads();
-        updateAllDownloadButtons();
-        showToast('Download removed', '');
+        updateDownloads();
+        updateFollowing();
+        updateEpisodeButtons();
       }
     }
 
-    function updateAllDownloadButtons() {
-      state.downloads.forEach(dl => {
-        updateDownloadButtonForUrl(dl.url);
-      });
-    }
-
-    // ========================================
-    // NAVIGATION
-    // ========================================
-
-    function switchTab(tab) {
-      state.currentTab = tab;
-      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-      $(`view-${tab}`).classList.add('active');
-      document.querySelectorAll('.tab-btn').forEach(b => {
-        b.classList.toggle('active', b.dataset.tab === tab);
-      });
-      if (tab === 'following') loadFollowingFeed();
-      if (tab === 'downloads') renderDownloads();
-    }
-
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => switchTab(btn.dataset.tab));
-    });
-
-    // ========================================
-    // SEARCH
-    // ========================================
-
-    const searchInput = $('search-input');
-    const searchClear = $('search-clear');
-    let searchTimeout;
-
-    searchInput.addEventListener('input', () => {
-      searchClear.classList.toggle('visible', searchInput.value.length > 0);
-      clearTimeout(searchTimeout);
-      if (searchInput.value.trim().length >= 2) {
-        searchTimeout = setTimeout(() => doSearch(searchInput.value.trim()), 400);
-      } else if (searchInput.value.length === 0) {
-        renderSearchEmpty();
-      }
-    });
-
-    searchInput.addEventListener('keydown', e => {
-      if (e.key === 'Enter') {
-        clearTimeout(searchTimeout);
-        doSearch(searchInput.value.trim());
-      }
-    });
-
-    searchClear.addEventListener('click', () => {
-      searchInput.value = '';
-      searchClear.classList.remove('visible');
-      renderSearchEmpty();
-      searchInput.focus();
-    });
-
-    function renderSearchEmpty() {
-      if (state.searchHistory.length > 0) {
-        $('search-content').innerHTML = `
-          <div style="margin-bottom:12px">
-            <div class="settings-label">Recent Searches</div>
-            <div style="display:flex;flex-wrap:wrap;gap:8px">
-              ${state.searchHistory.map(q => `
-                <button onclick="doSearch('${escAttr(q)}')" style="padding:6px 14px;border-radius:20px;background:var(--surface);border:1px solid var(--border);font-size:13px;font-weight:500;color:var(--text-2);transition:background 0.15s">${escAttr(q)}</button>
-              `).join('')}
-            </div>
-          </div>
-        `;
-      } else {
-        $('search-content').innerHTML = `
-          <div class="empty-state">
-            <div class="empty-icon"><i class="fas fa-podcast"></i></div>
-            <div class="empty-title">Find your next listen</div>
-            <div class="empty-sub">Search for any podcast by name, topic, or creator</div>
-          </div>
-        `;
+    function playDownload(dlId) {
+      const dl = state.downloads.find(d => d.id === dlId);
+      if (dl && dl.blob) {
+        const url = URL.createObjectURL(dl.blob);
+        state.currentEpisode = { title: dl.title, url, podcastTitle: dl.podcastTitle, image: dl.podcastImage, description: dl.description };
+        audio.src = url;
+        audio.play();
+        state.isPlaying = true;
+        updateUI();
+        updateFPUI();
+        $('mini-player').classList.add('visible');
+        openFullPlayer();
       }
     }
 
-    async function doSearch(q) {
-      if (!q.trim()) return;
-      
-      if (!state.searchHistory.includes(q)) {
-        state.searchHistory.unshift(q);
-        if (state.searchHistory.length > 20) state.searchHistory.pop();
+    function clearDownloads() {
+      if (confirm('Delete all downloads?')) {
+        state.downloads = state.downloads.map(d => ({...d, status: 'deleted'}));
         saveState();
+        updateDownloads();
+        showToast('Downloads cleared', 'success');
       }
-      
-      $('search-content').innerHTML = '<div style="padding:40px;text-align:center"><i class="fas fa-spinner fa-spin" style="font-size:24px;color:var(--text-3)"></i></div>';
-      
-      try {
-        const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&media=podcast&limit=50`);
-        if (!res.ok) throw new Error('Search failed');
-        const data = await res.json();
-        const results = data.results || [];
-        
-        if (results.length === 0) {
-          $('search-content').innerHTML = `
-            <div class="empty-state">
-              <div class="empty-icon"><i class="fas fa-search"></i></div>
-              <div class="empty-title">No results</div>
-              <div class="empty-sub">Try a different search term</div>
-            </div>
-          `;
-          return;
-        }
-        
-        $('search-content').innerHTML = results.map(pod => `
-          <div class="pod-card" onclick="openPodcastDetail('${escAttr(pod.feedUrl)}', '${escAttr(pod.collectionName)}', '${escAttr(pod.artworkUrl600)}', '${escAttr(pod.artistName)}')">
-            <img src="${pod.artworkUrl600}" alt="" class="pod-card-art" onerror="this.style.background='var(--surface-3)'">
-            <div class="pod-card-info">
-              <div class="pod-card-title">${escAttr(pod.collectionName)}</div>
-              <div class="pod-card-artist">${escAttr(pod.artistName)}</div>
-            </div>
-            <i class="fas fa-chevron-right pod-card-chevron"></i>
-          </div>
-        `).join('');
-      } catch (err) {
-        $('search-content').innerHTML = `
-          <div class="empty-state">
-            <div class="empty-icon"><i class="fas fa-exclamation-triangle"></i></div>
-            <div class="empty-title">Search failed</div>
-            <div class="empty-sub">Check your connection and try again</div>
-          </div>
-        `;
-      }
-    }
-
-    // ========================================
-    // PODCAST DETAIL
-    // ========================================
-
-    async function openPodcastDetail(rss, title, image, artist) {
-      $('podcast-detail').classList.add('open');
-      state.currentPodcast = { rss, title, image, artist };
-      state.currentEpisodes = [];
-      
-      const following = isFollowing(rss);
-      $('detail-follow-btn').className = `detail-follow-btn ${following ? 'following' : 'not-following'}`;
-      $('detail-follow-btn').textContent = following ? '✓ Following' : '+ Follow';
-      $('detail-header-title').textContent = title;
-      
-      $('detail-hero').innerHTML = `
-        <img src="${image}" alt="" class="detail-art" onerror="this.style.background='var(--surface-3)'">
-        <div class="detail-hero-info">
-          <div class="detail-hero-title">${escAttr(title)}</div>
-          <div class="detail-hero-artist">${escAttr(artist)}</div>
-        </div>
-      `;
-      
-      $('detail-eps-list').innerHTML = '<div style="text-align:center;padding:40px;"><i class="fas fa-spinner fa-spin" style="font-size:20px;color:var(--text-3)"></i></div>';
-      
-      try {
-        const res = await fetchWithProxy(rss);
-        const xml = await res.text();
-        const parsed = parseRSS(xml);
-        state.currentEpisodes = parsed.episodes;
-        state.currentPodcast.image = parsed.image || image;
-        
-        $('detail-eps-list').innerHTML = state.currentEpisodes.map((ep, i) => `
-          <div class="ep-item">
-            <button class="ep-play-btn" onclick="playEpisode(${i})"><i class="fas fa-play"></i></button>
-            <div class="ep-info">
-              <div class="ep-title">${escAttr(ep.title)}</div>
-              <div class="ep-meta">
-                <span>${formatDate(ep.date)}</span>
-                ${ep.duration ? `<span>${formatDuration(ep.duration)}</span>` : ''}
-              </div>
-            </div>
-            <div style="position:relative">
-              <button class="ep-dl-btn" data-dl-url="${escAttr(ep.url)}" onclick="event.stopPropagation(); startDownload('${escAttr(ep.url)}', '${escAttr(ep.title)}', '${escAttr(title)}', '${escAttr(image)}', '${escAttr(ep.date)}', '${escAttr(ep.duration)}')">
-                <i class="fas fa-download"></i>
-              </button>
-              ${isDownloaded(ep.url) ? '<span style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--success);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff"><i class="fas fa-check"></i></span>' : ''}
-            </div>
-          </div>
-        `).join('');
-        
-        updateAllDownloadButtons();
-      } catch (err) {
-        $('detail-eps-list').innerHTML = `<div class="empty-state"><div class="empty-icon"><i class="fas fa-exclamation-triangle"></i></div><div class="empty-title">Load failed</div></div>`;
-      }
-    }
-
-    function closePodcastDetail() {
-      $('podcast-detail').classList.remove('open');
-    }
-
-    function toggleFollowFromDetail() {
-      if (!state.currentPodcast) return;
-      const { rss, title, image, artist } = state.currentPodcast;
-      const idx = state.follows.findIndex(f => f.rss === rss);
-      
-      if (idx >= 0) {
-        state.follows.splice(idx, 1);
-      } else {
-        state.follows.push({ rss, title, image, artist });
-      }
-      
-      saveState();
-      const following = idx < 0;
-      $('detail-follow-btn').className = `detail-follow-btn ${following ? 'following' : 'not-following'}`;
-      $('detail-follow-btn').textContent = following ? '✓ Following' : '+ Follow';
-      showToast(following ? 'Added to following' : 'Removed from following', '');
     }
 
     // ========================================
     // PLAYBACK
     // ========================================
 
-    function playEpisode(idx) {
-      const ep = state.currentEpisodes[idx];
-      if (!ep || !ep.url) return;
-      
-      state.currentEpisode = ep;
-      audio.src = ep.url;
-      audio.play().catch(e => showToast('Playback failed', 'error'));
-      state.isPlaying = true;
-      
-      updatePlayerUI();
-      $('mini-player').classList.add('visible');
-      $('fp-bottom-actions').style.display = 'flex';
-      updateDownloadButtonForUrl(ep.url);
+    function updateUI() {
+      const ep = state.currentEpisode;
+      if (!ep) {
+        $('mini-title').textContent = 'Not playing';
+        $('mini-sub').textContent = '--';
+        $('mini-art').src = '';
+        return;
+      }
+
+      $('mini-title').textContent = ep.title || '--';
+      $('mini-sub').textContent = ep.podcastTitle || '--';
+      $('mini-art').src = ep.image || '';
+
+      const icon = $('mini-play-icon');
+      icon.className = state.isPlaying ? 'fas fa-pause' : 'fas fa-play';
     }
 
-    function updatePlayerUI() {
+    function updateFPUI() {
       const ep = state.currentEpisode;
       if (!ep) return;
+
+      $('fp-title').textContent = ep.title || '--';
+      $('fp-podcast').textContent = ep.podcastTitle || '--';
+      $('fp-artwork').src = ep.image || '';
       
-      const art = state.currentPodcast?.image || '';
-      $('mini-art').src = art;
-      $('mini-title').textContent = ep.title;
-      $('mini-sub').textContent = state.currentPodcast?.title || '--';
-      
-      $('fp-artwork').src = art;
-      $('fp-title').textContent = ep.title;
-      $('fp-podcast').textContent = state.currentPodcast?.title || '--';
+      const desc = ep.description || '';
+      if (desc) {
+        $('fp-description').textContent = desc.substring(0, 100) + '...';
+      } else {
+        $('fp-description').textContent = 'No description available';
+      }
+
+      const icon = $('fp-play-icon');
+      icon.className = state.isPlaying ? 'fas fa-pause' : 'fas fa-play';
     }
+
+    function updateFPDownloadBtn() {
+      if (!state.currentEpisode || !state.currentEpisode.url) return;
+      const btn = $('fp-download-btn');
+      const url = state.currentEpisode.url;
+      const isDownloaded = state.downloads.some(d => d.url === url && d.status === 'done');
+      
+      if (isDownloaded) {
+        btn.classList.add('downloading');
+        btn.querySelector('.status-badge').classList.remove('hidden');
+      } else {
+        btn.classList.remove('downloading');
+        btn.querySelector('.status-badge').classList.add('hidden');
+      }
+    }
+
+    function togglePlayback() {
+      if (!state.currentEpisode) return;
+      state.isPlaying ? audio.pause() : audio.play();
+      state.isPlaying = !state.isPlaying;
+      updateUI();
+      updateFPUI();
+    }
+
+    function seekRelative(sec) {
+      audio.currentTime = Math.max(0, audio.currentTime + sec);
+    }
+
+    function cycleSpeed() {
+      const idx = SPEEDS.indexOf(state.speed);
+      state.speed = SPEEDS[(idx + 1) % SPEEDS.length];
+      audio.playbackRate = state.speed;
+      $('fp-speed-btn').textContent = state.speed + 'x';
+      saveState();
+    }
+
+    function downloadCurrentEpisode() {
+      if (!state.currentEpisode || !state.currentEpisode.url) {
+        showToast('No episode to download', 'error');
+        return;
+      }
+
+      if (isDownloaded(state.currentEpisode.url)) {
+        showToast('Already downloaded', 'error');
+        return;
+      }
+
+      startDownload(
+        state.currentEpisode.url,
+        state.currentEpisode.title,
+        state.currentEpisode.podcastTitle,
+        state.currentEpisode.image,
+        '',
+        ''
+      );
+    }
+
+    // ========================================
+    // MINI PLAYER
+    // ========================================
 
     function openFullPlayer() {
       $('full-player').classList.add('open');
@@ -1366,181 +1297,285 @@
       $('full-player').classList.remove('open');
     }
 
-    function togglePlayback() {
-      if (!state.currentEpisode && audio.src === '') return;
-      
-      if (state.isPlaying) {
-        audio.pause();
-        state.isPlaying = false;
-      } else {
-        audio.play().catch(e => showToast('Playback failed', 'error'));
-        state.isPlaying = true;
-      }
-      updatePlayIcon();
-    }
-
-    function updatePlayIcon() {
-      const icon = state.isPlaying ? 'fa-pause' : 'fa-play';
-      $('mini-play-icon').className = `fas ${icon}`;
-      $('fp-play-icon').className = `fas ${icon}`;
-    }
-
-    function seekRelative(seconds) {
-      if (isNaN(audio.duration)) return;
-      audio.currentTime = Math.max(0, Math.min(audio.duration, audio.currentTime + seconds));
-    }
-
-    function cycleSpeed() {
-      const idx = SPEEDS.indexOf(state.speed);
-      state.speed = SPEEDS[(idx + 1) % SPEEDS.length];
-      audio.playbackRate = state.speed;
-      $('fp-speed-btn').textContent = `${state.speed}x`;
-      saveState();
-    }
-
-    function downloadCurrentEpisode() {
-      if (!state.currentEpisode || !state.currentEpisode.url) return;
-      startDownload(state.currentEpisode.url, state.currentEpisode.title, state.currentPodcast?.title || 'Unknown', state.currentPodcast?.image || '', state.currentEpisode.date || '', state.currentEpisode.duration || '');
-    }
-
     // ========================================
-    // DOWNLOADS VIEW
+    // PODCAST DETAIL
     // ========================================
 
-    function renderDownloads() {
-      const content = $('downloads-content');
-      if (state.downloads.length === 0) {
-        content.innerHTML = `
-          <div class="empty-state">
-            <div class="empty-icon"><i class="fas fa-circle-down"></i></div>
-            <div class="empty-title">No downloads yet</div>
-            <div class="empty-sub">Downloaded episodes will appear here</div>
-          </div>
-        `;
-        return;
-      }
+    async function openPodcastDetail(feedUrl) {
+      const detail = $('podcast-detail');
+      detail.classList.add('open');
       
-      content.innerHTML = state.downloads.map(dl => `
-        <div class="dl-item">
-          <button class="ep-play-btn" style="width:40px;height:40px" onclick="playDownloadedEpisode('${escAttr(dl.url)}')"><i class="fas fa-play"></i></button>
-          <div class="dl-item-info">
-            <div class="dl-item-title">${escAttr(dl.title)}</div>
-            <div class="dl-item-sub">${escAttr(dl.podcastTitle)}</div>
-            ${dl.date ? `<div class="dl-item-sub" style="color:var(--text-3);margin-top:2px;font-size:11px">${formatDate(dl.date)}</div>` : ''}
-            ${dl.duration ? `<div class="dl-item-sub" style="color:var(--text-3);font-size:11px">${formatDuration(dl.duration)}</div>` : ''}
-            ${dl.status === 'downloading' ? `
-              <div class="dl-item-progress">
-                <div class="dl-item-progress-fill" style="width:${dl.progress}%"></div>
-              </div>
-              <div class="dl-item-sub" style="color:var(--accent)">${dl.progress}% downloading</div>
-            ` : dl.status === 'failed' ? `
-              <div class="dl-item-sub" style="color:var(--error)">${escAttr(dl.error || 'Download failed')}</div>
-            ` : ''}
+      try {
+        const resp = await fetchWithProxy(feedUrl);
+        const xml = await resp.text();
+        const feed = parseRSS(xml);
+        
+        state.currentPodcast = { ...feed, rss: feedUrl };
+        state.currentEpisodes = feed.episodes;
+        
+        renderPodcastDetail();
+      } catch(e) {
+        showToast('Failed to load podcast: ' + e.message, 'error');
+        detail.classList.remove('open');
+      }
+    }
+
+    function renderPodcastDetail() {
+      const pod = state.currentPodcast;
+      if (!pod) return;
+
+      const hero = $('detail-hero');
+      hero.innerHTML = `
+        <img src="${escAttr(pod.image)}" class="detail-art" alt="">
+        <div class="detail-hero-info">
+          <div class="detail-hero-title">${escAttr(pod.title)}</div>
+          <div class="detail-hero-artist">${escAttr(pod.artist)}</div>
+          <div class="detail-hero-count">${pod.episodes.length} episodes</div>
+        </div>
+      `;
+
+      const actions = $('detail-actions');
+      const following = isFollowing(pod.rss);
+      actions.innerHTML = `
+        <button class="action-btn primary" onclick="playFirstEpisode()"><i class="fas fa-play"></i> Play</button>
+        <button class="action-btn secondary" onclick="toggleFollow('${escAttr(pod.rss)}')">${following ? '✓ Following' : 'Follow'}</button>
+      `;
+
+      const list = $('detail-eps-list');
+      list.innerHTML = pod.episodes.map((ep, i) => `
+        <div class="ep-item">
+          <button class="ep-play-btn" onclick="playEpisode(${i})" data-ep-url="${escAttr(ep.url)}"><i class="fas fa-play"></i></button>
+          <div class="ep-info" onclick="showDescription('${escAttr(ep.description || '')}', '${escAttr(ep.title || '')}')">
+            <div class="ep-title">${escAttr(ep.title)}</div>
+            <div class="ep-meta">${formatDate(ep.date)} • ${formatDuration(ep.duration)}</div>
           </div>
-          <div class="dl-item-actions">
-            ${dl.status === 'done' ? `<button class="dl-item-btn ${state.savingDownloads.has(dl.id) ? 'saving' : ''}" id="save-btn-${dl.id}" onclick="saveDownloadToDevice('${dl.id}')" ${state.savingDownloads.has(dl.id) ? 'disabled' : ''}><i class="fas ${state.savingDownloads.has(dl.id) ? 'fa-spinner fa-spin' : 'fa-download'}"></i>${state.savingDownloads.has(dl.id) ? 'Saving...' : ''}</button>` : ''}
-            <button class="dl-item-btn delete" onclick="deleteDownload('${dl.id}')"><i class="fas fa-trash"></i></button>
-          </div>
+          <button class="ep-dl-btn ${isDownloaded(ep.url) ? 'done' : ''}" onclick="event.stopPropagation(); startDownload('${escAttr(ep.url)}', '${escAttr(ep.title)}', '${escAttr(pod.title)}', '${escAttr(pod.image)}', '${escAttr(ep.date)}', '${escAttr(ep.duration)}')">
+            <i class="fas ${isDownloaded(ep.url) ? 'fa-check' : 'fa-download'}"></i>
+            ${isDownloaded(ep.url) ? '<span class="ep-dl-badge"><i class="fas fa-check"></i></span>' : ''}
+          </button>
         </div>
       `).join('');
+
+      $('detail-header-title').textContent = pod.title;
+      updateDetailFollowBtn();
     }
 
-    function playDownloadedEpisode(url) {
-      const dl = state.downloads.find(d => d.url === url && d.status === 'done');
-      if (dl && dl.blob) {
-        const blobUrl = URL.createObjectURL(dl.blob);
-        state.currentEpisode = { title: dl.title, url: blobUrl };
-        state.currentPodcast = { title: dl.podcastTitle, image: dl.podcastImage };
-        audio.src = blobUrl;
-        audio.play().catch(e => showToast('Playback failed', 'error'));
+    function updateDetailFollowBtn() {
+      const btn = $('detail-follow-btn');
+      const following = isFollowing(state.currentPodcast.rss);
+      btn.className = `detail-follow-btn ${following ? 'following' : 'not-following'}`;
+      btn.innerHTML = following ? '<i class="fas fa-check"></i> Following' : '+ Follow';
+    }
+
+    function closePodcastDetail() {
+      $('podcast-detail').classList.remove('open');
+    }
+
+    function toggleFollowFromDetail() {
+      if (state.currentPodcast) {
+        toggleFollow(state.currentPodcast.rss);
+      }
+    }
+
+    function playFirstEpisode() {
+      if (state.currentEpisodes.length > 0) {
+        playEpisode(0);
+        openFullPlayer();
+      }
+    }
+
+    async function playEpisode(index) {
+      const ep = state.currentEpisodes[index];
+      if (!ep || !ep.url) return;
+
+      const btn = document.querySelector(`[data-ep-url="${escAttr(ep.url)}"]`);
+      if (btn) {
+        btn.classList.add('loading');
+        state.loadingEpisodes.add(ep.url);
+      }
+
+      try {
+        state.currentEpisode = {
+          title: ep.title,
+          url: ep.url,
+          podcastTitle: state.currentPodcast.title,
+          image: state.currentPodcast.image,
+          description: ep.description || '',
+        };
+        
+        audio.src = ep.url;
+        audio.play();
         state.isPlaying = true;
-        updatePlayerUI();
+        updateUI();
+        updateFPUI();
         $('mini-player').classList.add('visible');
-        $('fp-bottom-actions').style.display = 'flex';
+      } catch(e) {
+        showToast('Failed to play episode', 'error');
+      } finally {
+        if (btn) {
+          btn.classList.remove('loading');
+          state.loadingEpisodes.delete(ep.url);
+        }
       }
     }
 
-    function clearDownloads() {
-      if (confirm('Delete all downloads?')) {
-        state.downloads = [];
-        saveState();
-        renderDownloads();
-        updateAllDownloadButtons();
-        showToast('Downloads cleared', '');
+    function toggleFollow(rss) {
+      const following = isFollowing(rss);
+      if (following) {
+        state.follows = state.follows.filter(f => f.rss !== rss);
+      } else {
+        state.follows.push({ rss, title: state.currentPodcast.title, image: state.currentPodcast.image });
       }
+      saveState();
+      updateDetailFollowBtn();
+      updateFollowing();
+      showToast(following ? 'Unfollowed' : 'Following', 'success');
     }
 
-    // ========== FOLLOWING FEED ========== 
-    async function loadFollowingFeed() {
+    function updateEpisodeButtons() {
+      document.querySelectorAll('.ep-dl-btn').forEach(btn => {
+        const item = btn.closest('.ep-item');
+        if (!item) return;
+        const title = item.querySelector('.ep-title')?.textContent || '';
+        const isDown = state.downloads.some(d => d.title === title && d.status === 'done');
+        
+        btn.classList.toggle('done', isDown);
+        const badge = btn.querySelector('.ep-dl-badge');
+        if (isDown && !badge) {
+          btn.innerHTML = '<i class="fas fa-check"></i><span class="ep-dl-badge"><i class="fas fa-check"></i></span>';
+        } else if (!isDown && badge) {
+          btn.innerHTML = '<i class="fas fa-download"></i>';
+        }
+      });
+    }
+
+    // ========================================
+    // FOLLOWING FEED
+    // ========================================
+
+    async function updateFollowing() {
       const content = $('following-content');
       
       if (state.follows.length === 0) {
-        content.innerHTML = `
-          <div class="empty-state">
-            <div class="empty-icon"><i class="far fa-heart"></i></div>
-            <div class="empty-title">No followed podcasts</div>
-            <div class="empty-sub">When you follow podcasts, their latest episodes will appear here</div>
-          </div>
-        `;
+        content.innerHTML = '<div class="empty-state"><div class="empty-icon"><i class="far fa-heart"></i></div><div class="empty-title">No followed podcasts</div><div class="empty-sub">When you follow podcasts, their latest episodes will appear here</div></div>';
         return;
       }
+
+      const allEpisodes = [];
       
-      content.innerHTML = '<div style="padding:40px;text-align:center"><i class="fas fa-spinner fa-spin" style="font-size:24px;color:var(--text-3)"></i></div>';
-      
-      try {
-        const allEps = [];
-        
-        for (const follow of state.follows) {
-          try {
-            const res = await fetchWithProxy(follow.rss);
-            const xml = await res.text();
-            const parsed = parseRSS(xml);
-            parsed.episodes.slice(0, MAX_FEED_EPISODES).forEach(ep => {
-              allEps.push({ ...ep, podcastTitle: follow.title, podcastImage: follow.image });
+      for (const follow of state.follows) {
+        try {
+          const resp = await fetchWithProxy(follow.rss);
+          const xml = await resp.text();
+          const feed = parseRSS(xml);
+          feed.episodes.slice(0, MAX_FEED_EPISODES).forEach(ep => {
+            allEpisodes.push({
+              ...ep,
+              podcastTitle: feed.title,
+              podcastImage: feed.image,
+              rss: follow.rss,
             });
-          } catch(e) {}
-        }
-        
-        allEps.sort((a, b) => new Date(b.date) - new Date(a.date));
-        
-        if (allEps.length === 0) {
-          content.innerHTML = `
-            <div class="empty-state">
-              <div class="empty-icon"><i class="fas fa-inbox"></i></div>
-              <div class="empty-title">No episodes yet</div>
-              <div class="empty-sub">Your followed podcasts haven't published new episodes</div>
-            </div>
-          `;
-          return;
-        }
-        
-        content.innerHTML = allEps.map(ep => `
-          <div class="feed-ep" onclick="playEpisode(0)">
-            <img src="${ep.podcastImage}" alt="" class="feed-ep-art" onerror="this.style.background='var(--surface-3)'">
-            <div class="feed-ep-info">
+          });
+        } catch(e) { continue; }
+      }
+
+      allEpisodes.sort((a, b) => new Date(b.date) - new Date(a.date));
+      
+      if (allEpisodes.length === 0) {
+        content.innerHTML = '<div class="empty-state"><div class="empty-icon"><i class="far fa-heart"></i></div><div class="empty-title">No episodes yet</div><div class="empty-sub">Check back soon for new episodes</div></div>';
+        return;
+      }
+
+      content.innerHTML = allEpisodes.map(ep => {
+        const isDown = isDownloaded(ep.url);
+        return `
+          <div class="feed-ep">
+            <img src="${escAttr(ep.podcastImage)}" class="feed-ep-art" alt="">
+            <div class="feed-ep-info" onclick="showDescription('${escAttr(ep.description || '')}', '${escAttr(ep.title || '')}')">
               <div class="feed-ep-pod">${escAttr(ep.podcastTitle)}</div>
               <div class="feed-ep-title">${escAttr(ep.title)}</div>
-              <div class="feed-ep-meta">
-                <span>${formatDate(ep.date)}</span>
-              </div>
+              <div class="feed-ep-meta">${formatDate(ep.date)} • ${formatDuration(ep.duration)}</div>
             </div>
-            <div style="position:relative">
-              <button class="ep-dl-btn" data-dl-url="${escAttr(ep.url)}" onclick="event.stopPropagation(); startDownload('${escAttr(ep.url)}', '${escAttr(ep.title)}', '${escAttr(ep.podcastTitle)}', '${escAttr(ep.podcastImage)}', '${escAttr(ep.date)}', '${escAttr(ep.duration)}')">
-                <i class="fas fa-download"></i>
+            <div class="feed-ep-actions">
+              <button class="feed-ep-play" onclick="playFollowingEpisode('${escAttr(ep.url)}', '${escAttr(ep.title)}', '${escAttr(ep.podcastTitle)}', '${escAttr(ep.podcastImage)}', '${escAttr(ep.description || '')}')"><i class="fas fa-play"></i></button>
+              <button class="feed-ep-dl ${isDown ? 'done' : ''}" onclick="startDownload('${escAttr(ep.url)}', '${escAttr(ep.title)}', '${escAttr(ep.podcastTitle)}', '${escAttr(ep.podcastImage)}', '${escAttr(ep.date)}', '${escAttr(ep.duration)}')">
+                <i class="fas ${isDown ? 'fa-check' : 'fa-download'}"></i>
+                ${isDown ? '<span class="feed-ep-dl-badge"><i class="fas fa-check"></i></span>' : ''}
               </button>
-              ${isDownloaded(ep.url) ? '<span style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--success);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff"><i class="fas fa-check"></i></span>' : ''}
             </div>
-          </div>
-        `).join('');
-        
-        updateAllDownloadButtons();
-      } catch(e) {
-        content.innerHTML = `
-          <div class="empty-state">
-            <div class="empty-icon"><i class="fas fa-exclamation-triangle"></i></div>
-            <div class="empty-title">Load failed</div>
           </div>
         `;
+      }).join('');
+    }
+
+    function playFollowingEpisode(url, title, podcastTitle, image, description) {
+      state.currentEpisode = { url, title, podcastTitle, image, description };
+      audio.src = url;
+      audio.play();
+      state.isPlaying = true;
+      updateUI();
+      updateFPUI();
+      $('mini-player').classList.add('visible');
+      openFullPlayer();
+    }
+
+    function clearFollows() {
+      if (confirm('Unfollow all podcasts?')) {
+        state.follows = [];
+        saveState();
+        updateFollowing();
+        showToast('Cleared', 'success');
+      }
+    }
+
+    // ========================================
+    // SEARCH
+    // ========================================
+
+    async function searchPodcasts(q) {
+      if (!q.trim()) {
+        $('search-content').innerHTML = '<div class="empty-state"><div class="empty-icon"><i class="fas fa-podcast"></i></div><div class="empty-title">Find your next listen</div><div class="empty-sub">Search for any podcast by name, topic, or creator</div></div>';
+        return;
+      }
+
+      $('search-content').innerHTML = '<div class="empty-state"><div class="empty-icon"><i class="fas fa-spinner spinner"></i></div></div>';
+
+      try {
+        const resp = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&media=podcast&limit=50`);
+        const data = await resp.json();
+        
+        const results = data.results || [];
+        if (results.length === 0) {
+          $('search-content').innerHTML = '<div class="empty-state"><div class="empty-icon"><i class="fas fa-search"></i></div><div class="empty-title">No podcasts found</div><div class="empty-sub">Try a different search</div></div>';
+          return;
+        }
+
+        $('search-content').innerHTML = results.map(r => `
+          <div class="pod-card" onclick="openPodcastDetail('${escAttr(r.feedUrl || '')}')">
+            <img src="${escAttr(r.artworkUrl100 || '')}" class="pod-card-art" alt="">
+            <div class="pod-card-info">
+              <div class="pod-card-title">${escAttr(r.collectionName || '')}</div>
+              <div class="pod-card-artist">${escAttr(r.artistName || '')}</div>
+            </div>
+            <div class="pod-card-chevron"><i class="fas fa-chevron-right"></i></div>
+          </div>
+        `).join('');
+
+        if (!state.searchHistory.includes(q)) {
+          state.searchHistory.unshift(q);
+          state.searchHistory = state.searchHistory.slice(0, 20);
+          saveState();
+        }
+      } catch(e) {
+        showToast('Search failed: ' + e.message, 'error');
+      }
+    }
+
+    function clearSearchHistory() {
+      if (confirm('Clear search history?')) {
+        state.searchHistory = [];
+        saveState();
+        showToast('Cleared', 'success');
       }
     }
 
@@ -1548,77 +1583,106 @@
     // SETTINGS
     // ========================================
 
-    function clearSearchHistory() {
-      if (confirm('Clear search history?')) {
-        state.searchHistory = [];
-        saveState();
-        renderSearchEmpty();
-        showToast('History cleared', '');
-      }
-    }
-
-    function clearFollows() {
-      if (confirm('Unfollow all podcasts?')) {
-        state.follows = [];
-        saveState();
-        loadFollowingFeed();
-        showToast('All unfollowed', '');
-      }
-    }
-
-    // ========================================
-    // AUDIO EVENTS
-    // ========================================
-
-    audio.addEventListener('play', () => {
-      state.isPlaying = true;
-      updatePlayIcon();
-    });
-
-    audio.addEventListener('pause', () => {
-      state.isPlaying = false;
-      updatePlayIcon();
-    });
-
-    audio.addEventListener('timeupdate', () => {
-      if (isNaN(audio.duration)) return;
-      const percent = audio.duration > 0 ? (audio.currentTime / audio.duration) * 100 : 0;
-      $('mini-progress-fill').style.width = `${percent}%`;
-      $('fp-seek-bar').value = percent * 10;
-      $('fp-time-current').textContent = formatTime(audio.currentTime);
-    });
-
-    audio.addEventListener('loadedmetadata', () => {
-      $('fp-seek-bar').max = 1000;
-      $('fp-time-duration').textContent = formatTime(audio.duration);
-    });
-
-    audio.addEventListener('ended', () => {
-      state.isPlaying = false;
-      updatePlayIcon();
-    });
-
-    $('fp-seek-bar').addEventListener('input', (e) => {
-      if (isNaN(audio.duration)) return;
-      const percent = e.target.value / 1000;
-      audio.currentTime = percent * audio.duration;
-    });
-
-    // ========================================
-    // INIT
-    // ========================================
-
-    function init() {
-      const speedHTML = SPEEDS.map(s => `
-        <button class="speed-opt ${s === state.speed ? 'active' : ''}" onclick="state.speed=${s};audio.playbackRate=${s};saveState();this.parentElement.querySelectorAll('.speed-opt').forEach(b=>b.classList.remove('active'));this.classList.add('active')">${s}x</button>
+    function initSettings() {
+      const speedOptions = $('speed-options');
+      speedOptions.innerHTML = SPEEDS.map(s => `
+        <button class="speed-opt ${state.speed === s ? 'active' : ''}" onclick="setSpeed(${s})">${s}x</button>
       `).join('');
-      $('speed-options').innerHTML = speedHTML;
-      
-      audio.playbackRate = state.speed;
-      renderSearchEmpty();
     }
 
-    init();
+    function setSpeed(s) {
+      state.speed = s;
+      audio.playbackRate = s;
+      $('fp-speed-btn').textContent = s + 'x';
+      saveState();
+      document.querySelectorAll('.speed-opt').forEach(b => b.classList.toggle('active', parseFloat(b.textContent) === s));
+    }
+
+    // ========================================
+    // TAB NAVIGATION
+    // ========================================
+
+    function switchTab(tab) {
+      state.currentTab = tab;
+      
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      
+      $(`view-${tab}`).classList.add('active');
+      document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+
+      if (tab === 'following') {
+        updateFollowing();
+      } else if (tab === 'downloads') {
+        updateDownloads();
+      }
+    }
+
+    // ========================================
+    // EVENTS
+    // ========================================
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Tab navigation
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+      });
+
+      // Search
+      $('search-input').addEventListener('input', e => {
+        const q = e.target.value.trim();
+        $('search-clear').classList.toggle('visible', q.length > 0);
+        if (q.length > 0) searchPodcasts(q);
+      });
+
+      $('search-clear').addEventListener('click', () => {
+        $('search-input').value = '';
+        $('search-clear').classList.remove('visible');
+        $('search-content').innerHTML = '<div class="empty-state"><div class="empty-icon"><i class="fas fa-podcast"></i></div><div class="empty-title">Find your next listen</div><div class="empty-sub">Search for any podcast by name, topic, or creator</div></div>';
+      });
+
+      // Audio events
+      audio.addEventListener('play', () => {
+        state.isPlaying = true;
+        updateUI();
+        updateFPUI();
+      });
+
+      audio.addEventListener('pause', () => {
+        state.isPlaying = false;
+        updateUI();
+        updateFPUI();
+      });
+
+      audio.addEventListener('timeupdate', () => {
+        if (audio.duration) {
+          const pct = (audio.currentTime / audio.duration) * 100;
+          $('mini-progress-fill').style.width = pct + '%';
+          $('fp-seek-bar').value = (audio.currentTime / audio.duration) * 1000;
+          $('fp-time-current').textContent = formatTime(audio.currentTime);
+        }
+      });
+
+      audio.addEventListener('loadedmetadata', () => {
+        $('fp-time-duration').textContent = formatTime(audio.duration);
+      });
+
+      $('fp-seek-bar').addEventListener('input', e => {
+        const pct = e.target.value / 1000;
+        audio.currentTime = pct * audio.duration;
+      });
+
+      // Close description on outside click
+      $('description-modal').addEventListener('click', e => {
+        if (e.target === $('description-modal')) closeDescription();
+      });
+
+      initSettings();
+      updateDownloads();
+    });
+
+    // Speed initialization
+    audio.playbackRate = state.speed;
   </script>
 </body>
 </html>
