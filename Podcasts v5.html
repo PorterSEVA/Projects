@@ -560,36 +560,46 @@
 
     /* ========== DOWNLOADS LIST ========== */
     .dl-item {
-      display: flex; align-items: center; gap: 12px;
+      display: flex; align-items: flex-start; gap: 12px;
       padding: 14px 0; border-bottom: 1px solid var(--border);
     }
     .dl-item:last-child { border-bottom: none; }
     .dl-item-icon {
-      width: 48px; height: 48px; border-radius: 8px;
+      width: 40px; height: 40px; border-radius: 50%;
       background: var(--accent-dim); color: var(--accent);
       display: flex; align-items: center; justify-content: center;
-      font-size: 16px; flex-shrink: 0; position: relative;
+      font-size: 14px; flex-shrink: 0; position: relative;
     }
     .dl-item-icon.done { color: var(--success); background: rgba(74,222,128,0.1); }
     .dl-item-icon.failed { color: var(--error); background: rgba(248,113,113,0.1); }
     .dl-item-info { flex: 1; min-width: 0; }
     .dl-item-title {
-      font-size: 14px; font-weight: 500;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      font-size: 14px; font-weight: 500; line-height: 1.3;
+      white-space: normal; word-break: break-word; margin-bottom: 4px;
     }
     .dl-item-sub {
-      font-size: 12px; color: var(--text-3); margin-top: 3px;
+      font-size: 12px; color: var(--text-3); margin-bottom: 6px;
+    }
+    .dl-item-progress {
+      width: 100%; height: 3px; border-radius: 2px;
+      background: var(--surface-3); overflow: hidden; margin-bottom: 6px;
+    }
+    .dl-item-progress-fill {
+      height: 100%; background: var(--accent); width: 0%;
+      transition: width 0.2s;
     }
     .dl-item-actions {
-      display: flex; gap: 8px; flex-shrink: 0;
+      display: flex; gap: 8px; flex-shrink: 0; margin-top: 4px;
     }
     .dl-item-btn {
       padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;
       background: var(--surface-2); color: var(--text-2);
       transition: background 0.15s;
+      display: flex; align-items: center; gap: 4px;
     }
     .dl-item-btn:active { background: var(--surface-3); }
     .dl-item-btn.delete { color: var(--error); }
+    .dl-item-btn.saving { color: var(--accent); background: var(--accent-dim); }
 
     /* ========== UTILITY ========== */
     .hidden { display: none !important; }
@@ -684,7 +694,7 @@
             <div class="settings-group">
               <button class="settings-item-btn" onclick="clearSearchHistory()">Clear search history</button>
               <button class="settings-item-btn" onclick="clearFollows()">Clear followed podcasts</button>
-              <button class="settings-item-btn" onclick="clearDownloads()">Clear download history</button>
+              <button class="settings-item-btn" onclick="clearDownloads()">Clear all downloads</button>
             </div>
           </div>
           <div class="settings-section">
@@ -810,12 +820,9 @@
     // ========================================
     // CONFIGURATION
     // ========================================
-    const PROXIES = [
-/*       'https://api.allorigins.win/raw?url=',
-      'https://corsproxy.io/?' */
-    ];
+    const PROXIES = [];
     const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
-    const MAX_FEED_EPISODES = 5; // per followed podcast
+    const MAX_FEED_EPISODES = 5;
 
     // ========================================
     // STATE
@@ -826,10 +833,11 @@
       downloads: JSON.parse(localStorage.getItem('pf_downloads') || '[]'),
       searchHistory: JSON.parse(localStorage.getItem('pf_search_history') || '[]'),
       speed: parseFloat(localStorage.getItem('pf_speed') || '1'),
-      currentPodcast: null,  // {title, image, rss, artist}
-      currentEpisodes: [],   // parsed episodes for current detail view
-      currentEpisode: null,  // currently playing episode
+      currentPodcast: null,
+      currentEpisodes: [],
+      currentEpisode: null,
       isPlaying: false,
+      savingDownloads: new Set(),
     };
 
     // ========================================
@@ -843,12 +851,10 @@
     // ========================================
 
     async function fetchWithProxy(url) {
-      // Try direct
       try {
         const r = await fetch(url);
         if (r.ok) return r;
       } catch(e) {}
-      // Try each proxy
       for (const proxy of PROXIES) {
         try {
           const r = await fetch(proxy + encodeURIComponent(url));
@@ -961,20 +967,26 @@
       return `dl_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     }
 
+    function isDownloaded(url) {
+      return state.downloads.some(d => d.url === url && d.status === 'done');
+    }
+
     // ========================================
     // DOWNLOAD SYSTEM
     // ========================================
 
-    async function startDownload(url, title, podcastTitle) {
+    async function startDownload(url, title, podcastTitle, podcastImage, date, duration) {
       const dlId = generateDownloadId(url, title);
       const ext = getAudioExt(url);
       
-      // Create download entry
       const dlEntry = {
         id: dlId,
         url,
         title,
         podcastTitle,
+        podcastImage,
+        date,
+        duration,
         ext,
         status: 'downloading',
         progress: 0,
@@ -1060,6 +1072,9 @@
         return;
       }
       
+      state.savingDownloads.add(dlId);
+      renderDownloads();
+      
       try {
         const filename = `${sanitize(dl.title)}.${dl.ext}`;
         
@@ -1080,8 +1095,12 @@
           URL.revokeObjectURL(url);
         }
         
+        state.savingDownloads.delete(dlId);
+        renderDownloads();
         showToast('Saved successfully', 'success');
       } catch (err) {
+        state.savingDownloads.delete(dlId);
+        renderDownloads();
         if (err.name !== 'AbortError') {
           showToast('Could not save file', 'error');
         }
@@ -1269,9 +1288,12 @@
                 ${ep.duration ? `<span>${formatDuration(ep.duration)}</span>` : ''}
               </div>
             </div>
-            <button class="ep-dl-btn" data-dl-url="${escAttr(ep.url)}" onclick="event.stopPropagation(); startDownload('${escAttr(ep.url)}', '${escAttr(ep.title)}', '${escAttr(title)}')">
-              <i class="fas fa-download"></i>
-            </button>
+            <div style="position:relative">
+              <button class="ep-dl-btn" data-dl-url="${escAttr(ep.url)}" onclick="event.stopPropagation(); startDownload('${escAttr(ep.url)}', '${escAttr(ep.title)}', '${escAttr(title)}', '${escAttr(image)}', '${escAttr(ep.date)}', '${escAttr(ep.duration)}')">
+                <i class="fas fa-download"></i>
+              </button>
+              ${isDownloaded(ep.url) ? '<span style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--success);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff"><i class="fas fa-check"></i></span>' : ''}
+            </div>
           </div>
         `).join('');
         
@@ -1378,7 +1400,7 @@
 
     function downloadCurrentEpisode() {
       if (!state.currentEpisode || !state.currentEpisode.url) return;
-      startDownload(state.currentEpisode.url, state.currentEpisode.title, state.currentPodcast?.title || 'Unknown');
+      startDownload(state.currentEpisode.url, state.currentEpisode.title, state.currentPodcast?.title || 'Unknown', state.currentPodcast?.image || '', state.currentEpisode.date || '', state.currentEpisode.duration || '');
     }
 
     // ========================================
@@ -1400,21 +1422,42 @@
       
       content.innerHTML = state.downloads.map(dl => `
         <div class="dl-item">
-          <div class="dl-item-icon ${dl.status}">
-            <i class="fas fa-${dl.status === 'downloading' ? 'hourglass-end' : dl.status === 'done' ? 'check' : 'exclamation'}"></i>
-          </div>
+          <button class="ep-play-btn" style="width:40px;height:40px" onclick="playDownloadedEpisode('${escAttr(dl.url)}')"><i class="fas fa-play"></i></button>
           <div class="dl-item-info">
             <div class="dl-item-title">${escAttr(dl.title)}</div>
-            <div class="dl-item-sub">
-              ${escAttr(dl.podcastTitle)}${dl.status === 'downloading' ? ` · ${dl.progress}%` : dl.status === 'failed' ? ` · ${escAttr(dl.error || 'Failed')}` : ''}
-            </div>
+            <div class="dl-item-sub">${escAttr(dl.podcastTitle)}</div>
+            ${dl.date ? `<div class="dl-item-sub" style="color:var(--text-3);margin-top:2px;font-size:11px">${formatDate(dl.date)}</div>` : ''}
+            ${dl.duration ? `<div class="dl-item-sub" style="color:var(--text-3);font-size:11px">${formatDuration(dl.duration)}</div>` : ''}
+            ${dl.status === 'downloading' ? `
+              <div class="dl-item-progress">
+                <div class="dl-item-progress-fill" style="width:${dl.progress}%"></div>
+              </div>
+              <div class="dl-item-sub" style="color:var(--accent)">${dl.progress}% downloading</div>
+            ` : dl.status === 'failed' ? `
+              <div class="dl-item-sub" style="color:var(--error)">${escAttr(dl.error || 'Download failed')}</div>
+            ` : ''}
           </div>
           <div class="dl-item-actions">
-            ${dl.status === 'done' ? `<button class="dl-item-btn" onclick="saveDownloadToDevice('${dl.id}')"><i class="fas fa-download"></i></button>` : ''}
+            ${dl.status === 'done' ? `<button class="dl-item-btn ${state.savingDownloads.has(dl.id) ? 'saving' : ''}" id="save-btn-${dl.id}" onclick="saveDownloadToDevice('${dl.id}')" ${state.savingDownloads.has(dl.id) ? 'disabled' : ''}><i class="fas ${state.savingDownloads.has(dl.id) ? 'fa-spinner fa-spin' : 'fa-download'}"></i>${state.savingDownloads.has(dl.id) ? 'Saving...' : ''}</button>` : ''}
             <button class="dl-item-btn delete" onclick="deleteDownload('${dl.id}')"><i class="fas fa-trash"></i></button>
           </div>
         </div>
       `).join('');
+    }
+
+    function playDownloadedEpisode(url) {
+      const dl = state.downloads.find(d => d.url === url && d.status === 'done');
+      if (dl && dl.blob) {
+        const blobUrl = URL.createObjectURL(dl.blob);
+        state.currentEpisode = { title: dl.title, url: blobUrl };
+        state.currentPodcast = { title: dl.podcastTitle, image: dl.podcastImage };
+        audio.src = blobUrl;
+        audio.play().catch(e => showToast('Playback failed', 'error'));
+        state.isPlaying = true;
+        updatePlayerUI();
+        $('mini-player').classList.add('visible');
+        $('fp-bottom-actions').style.display = 'flex';
+      }
     }
 
     function clearDownloads() {
@@ -1481,10 +1524,11 @@
                 <span>${formatDate(ep.date)}</span>
               </div>
             </div>
-            <div class="feed-ep-actions">
-              <button class="ep-dl-btn" data-dl-url="${escAttr(ep.url)}" onclick="event.stopPropagation(); startDownload('${escAttr(ep.url)}', '${escAttr(ep.title)}', '${escAttr(ep.podcastTitle)}')">
+            <div style="position:relative">
+              <button class="ep-dl-btn" data-dl-url="${escAttr(ep.url)}" onclick="event.stopPropagation(); startDownload('${escAttr(ep.url)}', '${escAttr(ep.title)}', '${escAttr(ep.podcastTitle)}', '${escAttr(ep.podcastImage)}', '${escAttr(ep.date)}', '${escAttr(ep.duration)}')">
                 <i class="fas fa-download"></i>
               </button>
+              ${isDownloaded(ep.url) ? '<span style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--success);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff"><i class="fas fa-check"></i></span>' : ''}
             </div>
           </div>
         `).join('');
@@ -1565,7 +1609,6 @@
     // ========================================
 
     function init() {
-      // Render speed options
       const speedHTML = SPEEDS.map(s => `
         <button class="speed-opt ${s === state.speed ? 'active' : ''}" onclick="state.speed=${s};audio.playbackRate=${s};saveState();this.parentElement.querySelectorAll('.speed-opt').forEach(b=>b.classList.remove('active'));this.classList.add('active')">${s}x</button>
       `).join('');
